@@ -4,6 +4,8 @@ This document captures the assumptions, constraints, and design decisions behind
 the FX rate integration and currency conversion system. It is intended for developers
 maintaining or extending this codebase.
 
+I had to do a little research about FX Trading and Conversion before carrying out this project, in order to accurately depict conversion vis-a-vis trading
+
 ---
 
 ## 1. Rate Provider
