@@ -229,7 +229,10 @@ provider involved — the entire operation is atomic within a single DB transact
 
 ---
 
-## 8. What This System Does Not Handle
+## 8. Wallet design
+To support the multi-currency system, a user is allowed to have multiple entries on the wallets table but not more than one for each currency, using strict checks all-round.
+
+## 9. What This System Does Not Handle
 
 The following are out of scope and would need to be added explicitly:
 
