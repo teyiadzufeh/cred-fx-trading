@@ -21,6 +21,23 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
+## CQRS Pattern
+
+Every module follows the same pattern — controllers never call services directly:
+
+```
+Controller → CommandBus.execute(new XCommand(dto))
+           → QueryBus.execute(new XQuery(id))
+                ↓
+           Handler (ICommandHandler / IQueryHandler)
+                ↓
+           TypeORM Repository
+```
+
+Commands mutate state. Queries read state. Both are fully typed and independently testable.
+
+---
+
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
