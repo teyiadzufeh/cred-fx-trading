@@ -104,11 +104,78 @@ Check out a few resources that may come in handy when working with NestJS:
 
 Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-## Stay in touch
+## Flow diagrams
+1. Currency Exchange
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+POST /wallets/convert  or  POST /wallets/trade
+            │
+            ▼
+  JwtAuthGuard + IsEmailVerifiedGuard
+            │
+            ▼
+  FxRateService.getRate()          ← rate locked HERE, outside DB
+  [NGN must be on one side]
+            │
+            ▼
+  ┌─────────────────────────────────────────┐
+  │           DB transaction (atomic)       │
+  │                                         │
+  │  Lock source wallet  →  Lock / create   │
+  │                         dest wallet     │
+  │                                         │
+  │  Save balances + 2 transaction records  │
+  │  (DEBIT on source, CREDIT on dest)      │
+  └─────────────────────────────────────────┘
+            │
+            ▼
+  Return { rate, amountDebited, amountCredited,
+           reference, sourceBalance, destBalance }
+
+2. Wallet mgmt architecture
+
+User
+├── emailVerified = true (required to transact)
+│
+├── NGN wallet          ← auto-created on email verification
+├── USD wallet          ← created on demand (POST /wallets or first conversion)
+├── GBP wallet          ← created on demand
+└── EUR wallet          ← created on demand
+
+UNIQUE(user_id, currency) enforced at DB + service layer
+One wallet per currency — duplicate insert rejected with 409
+
+All wallets
+└── Transaction records
+    └── DEBIT on source + CREDIT on dest
+        linked by shared conversionReference
+
+3. Trading logic flow
+
+POST /wallets/trade
+{ direction, currency, amount }
+            │
+            ▼
+  Resolve direction → currencies (in controller)
+            │
+     ┌──────┴──────┐
+    BUY           SELL
+     │              │
+     ▼              ▼
+from = NGN      from = foreign
+to = foreign    to = NGN
+     │              │
+     └──────┬────────┘
+            ▼
+  ConvertCurrencyCommand(userId, from, to, amount)
+            │
+            ▼
+  NGN constraint check
+  [rejects if NGN not on either side]
+            │
+            ▼
+  ConvertCurrencyHandler
+  (same handler as /wallets/convert)
+
 
 ## License
 
